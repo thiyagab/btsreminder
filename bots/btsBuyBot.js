@@ -47,7 +47,8 @@ class BTsBuyBot extends TeamsActivityHandler {
         this.onMessage(async (context, next) => {
             const conversationReference=this.addConversationReference(context.activity);
             const message = context.activity.text;
-            if(message.startsWith("remind")){
+            // Yes the code is shitty and its intentional
+            if(message.toLowerCase().startsWith("remind")){
                 const startIndex=6;
                 const endIndex=message.lastIndexOf('in ');
                 if(endIndex>0){
@@ -114,7 +115,7 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
     scheduleMessage(conversationReference,text,timeout,activityid){
-        setTimeout(() => {
+        const timeoutid=setTimeout(() => {
             this.adapter.continueConversation(conversationReference, async turnContext => {
                 //Update activity is not sending notification, and also seeing multiple messages is annoying, so delting the redundant scheduled message
                 const newActivity=MessageFactory.text(text);
