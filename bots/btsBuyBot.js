@@ -5,6 +5,8 @@ const { TeamsActivityHandler, CardFactory,TurnContext,MessageFactory} = require(
 
 class BTsBuyBot extends TeamsActivityHandler {
 
+    
+
     handleTeamsMessagingExtensionSubmitAction(context, action) {
         switch (action.commandId) {
         case 'RemindMe':
@@ -15,7 +17,7 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
    async  handleTeamsCardActionInvoke(context) {
-         await context.deleteActivity(context.activity.replyToId);
+         await this.deleteActivity(context,context.activity.replyToId);
          return { status: 200 };
     }
 
@@ -25,6 +27,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         // Dependency injected dictionary for storing ConversationReference objects used in NotifyController to proactively message users
         this.conversationReferences = conversationReferences;
         this.adapter=adapter;
+        this.scheduleActivityReferences=[]
 
         this.onConversationUpdate(async (context, next) => {
             this.addConversationReference(context.activity);
@@ -114,6 +117,13 @@ class BTsBuyBot extends TeamsActivityHandler {
         
     }
 
+
+    async deleteActivity (context,activityid){
+        clearTimeout(this.scheduleActivityReferences[activityid]);
+        this.scheduleActivityReferences.delete(activityid);
+        await context.deleteActivity(activityid);
+    }
+
     scheduleMessage(conversationReference,text,timeout,activityid){
         const timeoutid=setTimeout(() => {
             this.adapter.continueConversation(conversationReference, async turnContext => {
@@ -123,6 +133,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 await turnContext.sendActivity(newActivity);
             });
         }, timeout*3600*1000);
+        this.scheduleActivityReferences[activityid]=timeoutid;
     }
 
     sendMessage(conversationReference,textToRemind,reminderText,remindat){
