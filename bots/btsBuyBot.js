@@ -17,6 +17,7 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
    async  handleTeamsCardActionInvoke(context) {
+         console.log(context.activity)
          await this.deleteActivity(context,context.activity.replyToId);
          return { status: 200 };
     }
