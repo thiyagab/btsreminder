@@ -119,6 +119,7 @@ class BTsBuyBot extends TeamsActivityHandler {
 
 
     async deleteActivity (context,activityid){
+        console.log("before clear TimeoutID: "+timeoutid+" activityid: "+activityid);
         clearTimeout(this.scheduleActivityReferences[activityid]);
         delete this.scheduleActivityReferences[activityid];
         await context.deleteActivity(activityid);
@@ -134,6 +135,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 await turnContext.sendActivity(newActivity);
             });
         }, timeout*3600*1000);
+        console.log("TimeoutID: "+timeoutid+" activityid: "+activityid);
         this.scheduleActivityReferences[activityid]=timeoutid;
     }
 
