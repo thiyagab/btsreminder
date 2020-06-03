@@ -17,7 +17,7 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
    async  handleTeamsCardActionInvoke(context) {
-         console.log(context)
+         console.log(context.activity)
          await this.deleteActivity(context,context.activity.replyToId);
          return { status: 200 };
     }
@@ -149,14 +149,14 @@ class BTsBuyBot extends TeamsActivityHandler {
         this.adapter.continueConversation(conversationReference, async turnContext => {
             const activity=await turnContext.sendActivity({
                 attachments: [
-                    this.createCard(reminderText)
+                    this.createCard(reminderText,'123444')
                 ]
             });
             this.scheduleMessage(conversationReference,textToRemind,timeout,activity.id);
         });
     }
 
-    createCard(reminderText){
+    createCard(reminderText,activityid){
         return CardFactory.heroCard(
             "Reminder scheduled",
             reminderText,
@@ -165,7 +165,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 {
                     type: 'invoke',
                     title: 'Delete Reminder',
-                    value: 'delete'
+                    value: {'activityid':activityid}
                 }
             ])
         );
