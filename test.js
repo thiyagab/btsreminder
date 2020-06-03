@@ -1,3 +1,8 @@
 const str  = 'thiYYaga';
-console.log(str.toLowerCase())
-console.log(str);
+const scheduleActivityReferences=[]
+scheduleActivityReferences['dsgds']='dd'
+scheduleActivityReferences[2]='cd'
+scheduleActivityReferences[3]='dddd'
+delete scheduleActivityReferences[5]
+
+console.log(scheduleActivityReferences);

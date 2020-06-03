@@ -120,8 +120,9 @@ class BTsBuyBot extends TeamsActivityHandler {
 
     async deleteActivity (context,activityid){
         clearTimeout(this.scheduleActivityReferences[activityid]);
-        this.scheduleActivityReferences.delete(activityid);
+        delete this.scheduleActivityReferences[activityid];
         await context.deleteActivity(activityid);
+        
     }
 
     scheduleMessage(conversationReference,text,timeout,activityid){
