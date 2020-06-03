@@ -17,8 +17,8 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
    async  handleTeamsCardActionInvoke(context) {
-         console.log(context.activity)
-         await this.deleteActivity(context,context.activity.replyToId);
+         console.log(context.activity.value.timeoutid);
+         await this.deleteActivity(context,context.activity.replyToId,context.activity.value.timeoutid,context.activity.value.msgid);
          return { status: 200 };
     }
 
@@ -28,7 +28,8 @@ class BTsBuyBot extends TeamsActivityHandler {
         // Dependency injected dictionary for storing ConversationReference objects used in NotifyController to proactively message users
         this.conversationReferences = conversationReferences;
         this.adapter=adapter;
-        this.scheduleActivityReferences=[]
+        this.msgcountid=0;
+        this.msgActivityReferences=[]
 
         this.onConversationUpdate(async (context, next) => {
             this.addConversationReference(context.activity);
@@ -119,44 +120,49 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
 
-    async deleteActivity (context,activityid){
-        let timeoutid=this.scheduleActivityReferences[activityid];
-        console.log("before clear TimeoutID: "+timeoutid+" activityid: "+activityid);
-        clearTimeout(this.scheduleActivityReferences[activityid]);
-        delete this.scheduleActivityReferences[activityid];
+    async deleteActivity (context,activityid,timeoutid,msgcountid){
+        clearTimeout(timeoutid);
+        delete this.msgActivityReferences[msgcountid];
         await context.deleteActivity(activityid);
         
     }
 
-    scheduleMessage(conversationReference,text,timeout,activityid){
+    scheduleMessage(conversationReference,text,timeout,msgcountid){
         const timeoutid=setTimeout(() => {
             this.adapter.continueConversation(conversationReference, async turnContext => {
                 //Update activity is not sending notification, and also seeing multiple messages is annoying, so delting the redundant scheduled message
                 const newActivity=MessageFactory.text(text);
-                await turnContext.deleteActivity(activityid);
+                if (this.msgActivityReferences[msgcountid]){
+                    await turnContext.deleteActivity(this.msgActivityReferences[msgcountid]);
+                    delete this.msgActivityReferences[msgcountid];
+                }
                 await turnContext.sendActivity(newActivity);
             });
         }, timeout*3600*1000);
         console.log("TimeoutID: "+timeoutid+" activityid: "+activityid);
-        this.scheduleActivityReferences[activityid]=timeoutid;
+        return timeoutid;
     }
-
+    
     sendMessage(conversationReference,textToRemind,reminderText,remindat){
         let timeout=0.1;
         if(remindat){
            timeout= parseFloat(remindat);
         }
+        this.msgcountid++;
+        let timeoutid=this.scheduleMessage(conversationReference,textToRemind,timeout,this.msgcountid);
         this.adapter.continueConversation(conversationReference, async turnContext => {
             const activity=await turnContext.sendActivity({
                 attachments: [
-                    this.createCard(reminderText,'123444')
+                    this.createCard(reminderText,timeoutid,msgcountid)
                 ]
             });
-            this.scheduleMessage(conversationReference,textToRemind,timeout,activity.id);
+            msgActivityReferences[msgcountid]=activity.id;
+
+            
         });
     }
 
-    createCard(reminderText,activityid){
+    createCard(reminderText,timeoutid,msgcountid){
         return CardFactory.heroCard(
             "Reminder scheduled",
             reminderText,
@@ -165,7 +171,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 {
                     type: 'invoke',
                     title: 'Delete Reminder',
-                    value: {'activityid':activityid}
+                    value: {timeoutid,msgid:msgcountid}
                 }
             ])
         );

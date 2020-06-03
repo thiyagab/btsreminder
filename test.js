@@ -1,13 +1,13 @@
 const str  = 'thiYYaga';
-const scheduleActivityReferences=[]
+const scheduleActivityReferences=new Map();
 scheduleActivityReferences['dsgds']='dd'
 scheduleActivityReferences[2]='cd'
 scheduleActivityReferences[3]='dddd'
-delete scheduleActivityReferences[5]
+console.log(scheduleActivityReferences.delete('dsgds'));
 let id=setTimeout(() => {
-  console.log("hi")
+  console.log(scheduleActivityReferences['dsgds'])
 }, 3000);
-
-console.log(clearTimeout(id));
+let json= {value:{id,msgid:2}}
+console.log(json.value.msgid);
 
 
