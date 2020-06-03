@@ -130,16 +130,14 @@ class BTsBuyBot extends TeamsActivityHandler {
     scheduleMessage(conversationReference,text,timeout,msgcountid){
         const timeoutid=setTimeout(() => {
             this.adapter.continueConversation(conversationReference, async turnContext => {
-                //Update activity is not sending notification, and also seeing multiple messages is annoying, so delting the redundant scheduled message
-                const newActivity=MessageFactory.text(text);
+                //Update activity is not sending notification, and also seeing multiple messages is annoying, so delting the redundant scheduled message    
                 if (this.msgActivityReferences[msgcountid]){
                     await turnContext.deleteActivity(this.msgActivityReferences[msgcountid]);
                     delete this.msgActivityReferences[msgcountid];
                 }
-                await turnContext.sendActivity(newActivity);
+                await turnContext.sendActivity(MessageFactory.text(text));
             });
         }, timeout*3600*1000);
-        console.log("TimeoutID: "+timeoutid+" activityid: "+activityid);
         return timeoutid;
     }
     
