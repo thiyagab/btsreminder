@@ -119,6 +119,7 @@ class BTsBuyBot extends TeamsActivityHandler {
 
 
     async deleteActivity (context,activityid){
+        let timeoutid=this.scheduleActivityReferences[activityid];
         console.log("before clear TimeoutID: "+timeoutid+" activityid: "+activityid);
         clearTimeout(this.scheduleActivityReferences[activityid]);
         delete this.scheduleActivityReferences[activityid];
