@@ -18,7 +18,7 @@ class BTsBuyBot extends TeamsActivityHandler {
 
    async  handleTeamsCardActionInvoke(context) {
          console.log(context.activity.value.timeoutid);
-         await this.deleteActivity(context,context.activity.replyToId,context.activity.value.timeoutid,context.activity.value.msgid);
+         await this.deleteActivity(context,context.activity.replyToId,context.activity.value.msgid);
          return { status: 200 };
     }
 
@@ -30,6 +30,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         this.adapter=adapter;
         this.msgcount=0;
         this.msgActivityReferences=[]
+        this.msgTimeoutReferences=[]
 
         this.onConversationUpdate(async (context, next) => {
             this.addConversationReference(context.activity);
@@ -114,17 +115,17 @@ class BTsBuyBot extends TeamsActivityHandler {
                     ]
                 }
             };
-        }
-    
-        
+        } 
     }
 
 
-    async deleteActivity (context,activityid,timeoutid,msgid){
-        clearTimeout(timeoutid);
+    async deleteActivity (context,activityid,msgid){
+        if(this.msgTimeoutReferences[msgid]){
+            clearTimeout(this.msgTimeoutReferences[msgid]);
+        }
+        delete this.msgTimeoutReferences[msgid]
         delete this.msgActivityReferences[msgid];
         await context.deleteActivity(activityid);
-        
     }
 
     scheduleMessage(conversationReference,text,timeout,msgid){
@@ -147,21 +148,26 @@ class BTsBuyBot extends TeamsActivityHandler {
            timeout= parseFloat(remindat);
         }
         //If this code works for multiple users and multiple reminders, its a miracle
-        const msgid=this.msgcount++;
+        //and ofcourse this wont work between restarts 
+        const msgid=this.getUniqueMessageId();
         let timeoutid=this.scheduleMessage(conversationReference,textToRemind,timeout,msgid);
+        this.msgTimeoutReferences[msgid]=timeoutid;
         this.adapter.continueConversation(conversationReference, async turnContext => {
             const activity=await turnContext.sendActivity({
                 attachments: [
-                    this.createCard(reminderText,timeoutid,msgid)
+                    this.createCard(reminderText,msgid)
                 ]
             });
             this.msgActivityReferences[msgid]=activity.id;
-
-            
         });
     }
 
-    createCard(reminderText,timeoutid,msgid){
+    //In future our implementation will be db based, so we will store the msg, activity states in db
+    getUniqueMessageId(){
+        return this.msgcount++;
+    }
+
+    createCard(reminderText,msgid){
         return CardFactory.heroCard(
             "Reminder scheduled",
             reminderText,
@@ -170,7 +176,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 {
                     type: 'invoke',
                     title: 'Delete Reminder',
-                    value: {timeoutid,msgid:msgid}
+                    value: {msgid:msgid}
                 }
             ])
         );
