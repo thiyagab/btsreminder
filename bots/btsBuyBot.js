@@ -58,11 +58,11 @@ class BTsBuyBot extends TeamsActivityHandler {
                 const startIndex=6;
                 const endIndex=message.lastIndexOf('in ');
                 if(endIndex>0){
-                    const reminderText=message.substring(startIndex,endIndex);
+                    const reminderText=message.substring(startIndex,endIndex)+"<br> <i>"+message.substring(endIndex,message.length)+"</i>";
                     const interval=message.substring(endIndex+3,message.length).trim()
                     let intervalinHr=1;
                     intervalinHr=parseFloat(interval.split(' ')[0]);
-                    console.log(intervalinHr);
+                    console.log("Scheduling message in "+intervalinHr);
                     if(interval.indexOf('m')>0){
                         intervalinHr=intervalinHr/60;
                     }
@@ -98,7 +98,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         let conversationReference= this.conversationReferences[context.activity.from.id];
         textToRemind ="<b>Reminder:</b><br>"+ textToRemind+"<a href=\""+action.messagePayload.linkToMessage+"\"><i>Orignal Message</i></a>"
         let reminderText= action.messagePayload.body.content;
-        
+        console.log("Scheduling action message in "+remindat);
         if (conversationReference){
             this.sendMessage(conversationReference,textToRemind,reminderText,remindat);
             
@@ -152,6 +152,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         const msgid=this.getUniqueMessageId();
         let timeoutid=this.scheduleMessage(conversationReference,textToRemind,timeout,msgid);
         this.msgTimeoutReferences[msgid]=timeoutid;
+        console.log("Scheduling with msgid "+msgid+" total schedules: "+this.msgTimeoutReferences.length);
         this.adapter.continueConversation(conversationReference, async turnContext => {
             const activity=await turnContext.sendActivity({
                 attachments: [
@@ -168,7 +169,7 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
     createCard(reminderText,msgid){
-        return CardFactory.heroCard(
+        let card= CardFactory.heroCard(
             "Reminder scheduled",
             reminderText,
             null,
@@ -180,6 +181,9 @@ class BTsBuyBot extends TeamsActivityHandler {
                 }
             ])
         );
+        let date = new Date();
+        card.content.subtitle="scheduled at: "+date.getHours()+":"+date.getMinutes();
+
     }
     
 
