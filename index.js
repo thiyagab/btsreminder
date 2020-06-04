@@ -70,7 +70,7 @@ server.post('/api/messages', (req, res) => {
 });
 
 server.get('/status', (req, res) => {
-   return 'ok'
+   res.end('ok');
 });
 
 // Listen for Upgrade requests for Streaming.
