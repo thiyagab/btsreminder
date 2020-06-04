@@ -148,7 +148,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         if(remindat){
            timeout= parseFloat(remindat);
         }
-        reminderText=reminderText+"<br> <i> in "+(timeout<1? Math.ceil(timeout*60)+" minutes":timeout+" hours")+"</i>";
+        reminderText=reminderText+"<br> <i> in "+(timeout<1? Math.ceil(timeout*60)+" minute(s)":timeout+" hour(s)")+"</i>";
         //If this code works for multiple users and multiple reminders, its a miracle
         //and ofcourse this wont work between restarts 
         const msgid=this.getUniqueMessageId();
