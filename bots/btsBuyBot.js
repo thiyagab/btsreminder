@@ -58,7 +58,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 const startIndex=6;
                 const endIndex=message.lastIndexOf('in ');
                 if(endIndex>0){
-                    const reminderText=message.substring(startIndex,endIndex);
+                    let reminderText=message.substring(startIndex,endIndex);
                     const interval=message.substring(endIndex+3,message.length).trim()
                     let intervalinHr=1;
                     intervalinHr=parseFloat(interval.split(' ')[0]);
