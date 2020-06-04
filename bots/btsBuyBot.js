@@ -67,7 +67,6 @@ class BTsBuyBot extends TeamsActivityHandler {
                         intervalinHr=intervalinHr/60;
                     }
                     const textToRemind="<b>Reminder:</b><br>"+reminderText;
-                    reminderText=reminderText+"<br> <i>"+message.substring(endIndex,message.length)+"</i>";
                     this.sendMessage(conversationReference,textToRemind,reminderText,intervalinHr)
                 }else{
                     await context.sendActivity('Invalid format. Should end with:  in \'x\' mins|hrs|minutes|hours');
@@ -99,6 +98,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         let conversationReference= this.conversationReferences[context.activity.from.id];
         textToRemind ="<b>Reminder:</b><br>"+ textToRemind+"<a href=\""+action.messagePayload.linkToMessage+"\"><i>Orignal Message</i></a>"
         let reminderText= action.messagePayload.body.content;
+        if(remindat)
         console.log("Scheduling action message in "+remindat);
         if (conversationReference){
             this.sendMessage(conversationReference,textToRemind,reminderText,remindat);
@@ -148,6 +148,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         if(remindat){
            timeout= parseFloat(remindat);
         }
+        reminderText=reminderText+"<br> <i> in "+(timeout<1? Math.ceil(timeout*60)+" minutes":timeout+" hours")+"</i>";
         //If this code works for multiple users and multiple reminders, its a miracle
         //and ofcourse this wont work between restarts 
         const msgid=this.getUniqueMessageId();
