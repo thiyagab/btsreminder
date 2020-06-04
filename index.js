@@ -69,6 +69,10 @@ server.post('/api/messages', (req, res) => {
     });
 });
 
+server.get('/status', (req, res) => {
+   return 'ok'
+});
+
 // Listen for Upgrade requests for Streaming.
 server.on('upgrade', (req, socket, head) => {
     // Create an adapter scoped to this WebSocket connection to allow storing session data.
