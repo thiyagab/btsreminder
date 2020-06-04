@@ -58,7 +58,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 const startIndex=6;
                 const endIndex=message.lastIndexOf('in ');
                 if(endIndex>0){
-                    const reminderText=message.substring(startIndex,endIndex)+"<br> <i>"+message.substring(endIndex,message.length)+"</i>";
+                    const reminderText=message.substring(startIndex,endIndex);
                     const interval=message.substring(endIndex+3,message.length).trim()
                     let intervalinHr=1;
                     intervalinHr=parseFloat(interval.split(' ')[0]);
@@ -67,6 +67,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                         intervalinHr=intervalinHr/60;
                     }
                     const textToRemind="<b>Reminder:</b><br>"+reminderText;
+                    reminderText=reminderText+"<br> <i>"+message.substring(endIndex,message.length)+"</i>";
                     this.sendMessage(conversationReference,textToRemind,reminderText,intervalinHr)
                 }else{
                     await context.sendActivity('Invalid format. Should end with:  in \'x\' mins|hrs|minutes|hours');
@@ -181,8 +182,9 @@ class BTsBuyBot extends TeamsActivityHandler {
                 }
             ])
         );
-        let date = new Date();
-        card.content.subtitle="scheduled at: "+date.getHours()+":"+date.getMinutes();
+        //TODO do this after figuring out user's timezone
+        // let date = new Date();
+        // card.content.subtitle="scheduled at: "+date.getHours()+":"+date.getMinutes();
         return card;
 
     }
