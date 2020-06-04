@@ -183,6 +183,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         );
         let date = new Date();
         card.content.subtitle="scheduled at: "+date.getHours()+":"+date.getMinutes();
+        return card;
 
     }
     
