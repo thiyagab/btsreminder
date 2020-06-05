@@ -24,6 +24,8 @@ class BTsBuyBot extends TeamsActivityHandler {
     handleTeamsMessagingExtensionSubmitAction(context, action) {
         switch (action.commandId) {
         case 'RemindMe':
+
+
             return this.remindMe(context, action);
         default:
             throw new Error('NotImplemented');
@@ -74,6 +76,8 @@ class BTsBuyBot extends TeamsActivityHandler {
 
         this.onMessage(async (context, next) => {
             const conversationReference=this.addConversationReference(context.activity);
+            console.log(this.userProfileAccessor.conversationReference);
+            this.userProfileAccessor.conversationReference=conversationReference;
             const message = context.activity.text;
             console.log("Onmessage channelid: "+context.activity.channelId);
             // Yes the code is shitty and its intentional
