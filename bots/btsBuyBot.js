@@ -3,6 +3,10 @@
 
 const { TeamsActivityHandler, CardFactory,TurnContext,MessageFactory} = require('botbuilder');
 
+// The accessor names for the conversation data and user profile state property accessors.
+const CONVERSATION_DATA_PROPERTY = 'conversationData';
+const USER_PROFILE_PROPERTY = 'userProfile';
+
 class BTsBuyBot extends TeamsActivityHandler {
 
       /**
