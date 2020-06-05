@@ -60,10 +60,7 @@ const onTurnErrorHandler = async (context, error) => {
 // Set the onTurnError for the singleton BotFrameworkAdapter.
 adapter.onTurnError = onTurnErrorHandler;
 
-// Create the main dialog.
-// Create the main dialog.
-const conversationReferences = {};
-const bot = new BTsBuyBot(adapter,conversationReferences,conversationState,userState);
+const bot = new BTsBuyBot(adapter,conversationState,userState);
 
 // Listen for incoming requests.
 server.post('/api/messages', (req, res) => {

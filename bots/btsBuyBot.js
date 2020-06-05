@@ -16,7 +16,6 @@ class BTsBuyBot extends TeamsActivityHandler {
         await super.run(context);
 
         // Save any state changes. The load happened during the execution of the Dialog.
-        await this.conversationState.saveChanges(context, false);
         await this.userState.saveChanges(context, false);
     }
     
@@ -38,23 +37,16 @@ class BTsBuyBot extends TeamsActivityHandler {
          return { status: 200 };
     }
 
-    constructor(adapter,conversationReferences,conversationState,userState) {
+    constructor(adapter,userState) {
         super();
 
-        // Dependency injected dictionary for storing ConversationReference objects used in NotifyController to proactively message users
-        this.conversationReferences = conversationReferences;
         this.adapter=adapter;
         this.msgcount=0;
         this.msgActivityReferences=[]
-        this.msgTimeoutReferences=[]
+        this.msgTimeoutReferences=[]       
+        this.userProfileAccessor = userState.createProperty(USER_PROFILE_PROPERTY);
 
-         // Create the state property accessors for the conversation data and user profile.
-         this.conversationDataAccessor = conversationState.createProperty(CONVERSATION_DATA_PROPERTY);
-         this.userProfileAccessor = userState.createProperty(USER_PROFILE_PROPERTY);
- 
-         // The state management objects for the conversation and user state.
-         this.conversationState = conversationState;
-         this.userState = userState;
+        this.userState = userState;
 
         this.onConversationUpdate(async (context, next) => {
             this.addConversationReference(context.activity);
@@ -70,22 +62,18 @@ class BTsBuyBot extends TeamsActivityHandler {
                 }
             }
             console.log('My Son aadhav is brilliant')
-            // By calling next() you ensure that the next BotHandler is run.
             await next();
         });
 
         this.onMessage(async (context, next) => {
             const conversationReference=this.addConversationReference(context.activity);
-            console.log(this.userProfileAccessor.conversationReference);
-            
             const message = context.activity.text;
-            console.log("Onmessage channelid: "+context.activity.channelId);
             // Yes the code is shitty and its intentional
             if(message.toLowerCase().startsWith("remind")){
                 const startIndex=6;
                 const endIndex=message.lastIndexOf('in ');
                 if(endIndex>0){
-                    let reminderText=message.substring(startIndex,endIndex);
+                    let reminderText=message.substring(startIndex,endIndex).trim();
                     const interval=message.substring(endIndex+3,message.length).trim()
                     let intervalinHr=1;
                     intervalinHr=parseFloat(interval.split(' ')[0]);
@@ -100,8 +88,6 @@ class BTsBuyBot extends TeamsActivityHandler {
                 }
                 
             }
-            
-            
             await next();
         });
     }
@@ -109,12 +95,10 @@ class BTsBuyBot extends TeamsActivityHandler {
     addConversationReference(activity) {
         const conversationReference = TurnContext.getConversationReference(activity); 
         this.userProfileAccessor.conversationReference=conversationReference;
-        this.conversationReferences[conversationReference.user.id] = conversationReference;
         return conversationReference;
     }
 
     getConversationReference(context){
-        // return this.conversationReferences[context.activity.from.id];
         return this.userProfileAccessor.conversationReference;
     }
 
@@ -129,7 +113,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         console.log("Action channelid: "+context.activity.channelId);
         let remindat= action.data.remindat;
         let textToRemind= action.messagePayload.body.content;
-        let conversationReference= this.conversationReferences[context.activity.from.id];
+        let conversationReference= this.getConversationReference(context);
         textToRemind ="<b>Reminder:</b><br>"+ textToRemind+"<a href=\""+action.messagePayload.linkToMessage+"\"><i>Orignal Message</i></a>"
         let reminderText= action.messagePayload.body.content;
         if(remindat)
@@ -201,7 +185,7 @@ class BTsBuyBot extends TeamsActivityHandler {
 
     //In future our implementation will be db based, so we will store the msg, activity states in db
     getUniqueMessageId(){
-        return this.msgcount++;
+        return new Date().valueOf();
     }
 
     createCard(reminderText,msgid){

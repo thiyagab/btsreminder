@@ -2,6 +2,6 @@ const { TeamsActivityHandler, CardFactory,TurnContext,MessageFactory} = require(
 
 let ab=0.16;
 let str = ab<1?Math.ceil(ab*60)+" minutes":ab+" hours";
-console.log(str)
+console.log(new Date().valueOf())
 
 
