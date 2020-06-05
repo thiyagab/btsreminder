@@ -7,7 +7,7 @@ const restify = require('restify');
 
 // Import required bot services.
 // See https://aka.ms/bot-services to learn more about the different parts of a bot.
-const { BotFrameworkAdapter } = require('botbuilder');
+const { BotFrameworkAdapter,MemoryStorage, ConversationState, UserState } = require('botbuilder');
 
 // This bot's main dialog.
 const { BTsBuyBot } = require('./bots/btsBuyBot');
@@ -30,6 +30,12 @@ const adapter = new BotFrameworkAdapter({
     channelService: process.env.ChannelService,
     openIdMetadata: process.env.BotOpenIdMetadata
 });
+
+const memoryStorage = new MemoryStorage();
+
+// Create conversation and user state with in-memory storage provider.
+const conversationState = new ConversationState(memoryStorage);
+const userState = new UserState(memoryStorage);
 
 // Catch-all for errors.
 const onTurnErrorHandler = async (context, error) => {
@@ -57,7 +63,7 @@ adapter.onTurnError = onTurnErrorHandler;
 // Create the main dialog.
 // Create the main dialog.
 const conversationReferences = {};
-const bot = new BTsBuyBot(adapter,conversationReferences);
+const bot = new BTsBuyBot(adapter,conversationReferences,conversationState,userState);
 
 // Listen for incoming requests.
 server.post('/api/messages', (req, res) => {

@@ -5,6 +5,16 @@ const { TeamsActivityHandler, CardFactory,TurnContext,MessageFactory} = require(
 
 class BTsBuyBot extends TeamsActivityHandler {
 
+      /**
+     * Override the ActivityHandler.run() method to save state changes after the bot logic completes.
+     */
+    async run(context) {
+        await super.run(context);
+
+        // Save any state changes. The load happened during the execution of the Dialog.
+        await this.conversationState.saveChanges(context, false);
+        await this.userState.saveChanges(context, false);
+    }
     
 
     handleTeamsMessagingExtensionSubmitAction(context, action) {
@@ -22,7 +32,7 @@ class BTsBuyBot extends TeamsActivityHandler {
          return { status: 200 };
     }
 
-    constructor(adapter,conversationReferences) {
+    constructor(adapter,conversationReferences,conversationState,userState) {
         super();
 
         // Dependency injected dictionary for storing ConversationReference objects used in NotifyController to proactively message users
@@ -31,6 +41,14 @@ class BTsBuyBot extends TeamsActivityHandler {
         this.msgcount=0;
         this.msgActivityReferences=[]
         this.msgTimeoutReferences=[]
+
+         // Create the state property accessors for the conversation data and user profile.
+         this.conversationDataAccessor = conversationState.createProperty(CONVERSATION_DATA_PROPERTY);
+         this.userProfileAccessor = userState.createProperty(USER_PROFILE_PROPERTY);
+ 
+         // The state management objects for the conversation and user state.
+         this.conversationState = conversationState;
+         this.userState = userState;
 
         this.onConversationUpdate(async (context, next) => {
             this.addConversationReference(context.activity);
@@ -53,6 +71,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         this.onMessage(async (context, next) => {
             const conversationReference=this.addConversationReference(context.activity);
             const message = context.activity.text;
+            console.log("Onmessage channelid: "+context.activity.channelId);
             // Yes the code is shitty and its intentional
             if(message.toLowerCase().startsWith("remind")){
                 const startIndex=6;
@@ -93,6 +112,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 action.messagePayload.from.user.displayName) {
             userName = action.messagePayload.from.user.displayName;
         }
+        console.log("Action channelid: "+context.activity.channelId);
         let remindat= action.data.remindat;
         let textToRemind= action.messagePayload.body.content;
         let conversationReference= this.conversationReferences[context.activity.from.id];
