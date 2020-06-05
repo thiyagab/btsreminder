@@ -77,7 +77,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         this.onMessage(async (context, next) => {
             const conversationReference=this.addConversationReference(context.activity);
             console.log(this.userProfileAccessor.conversationReference);
-            this.userProfileAccessor.conversationReference=conversationReference;
+            
             const message = context.activity.text;
             console.log("Onmessage channelid: "+context.activity.channelId);
             // Yes the code is shitty and its intentional
@@ -108,8 +108,14 @@ class BTsBuyBot extends TeamsActivityHandler {
 
     addConversationReference(activity) {
         const conversationReference = TurnContext.getConversationReference(activity); 
+        this.userProfileAccessor.conversationReference=conversationReference;
         this.conversationReferences[conversationReference.user.id] = conversationReference;
         return conversationReference;
+    }
+
+    getConversationReference(context){
+        // return this.conversationReferences[context.activity.from.id];
+        return this.userProfileAccessor.conversationReference;
     }
 
     remindMe(context, action) {
