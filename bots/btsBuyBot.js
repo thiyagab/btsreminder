@@ -57,7 +57,7 @@ class BTsBuyBot extends TeamsActivityHandler {
             const membersAdded = context.activity.membersAdded;
             for (let cnt = 0; cnt < membersAdded.length; cnt++) {
                 if (membersAdded[cnt].id !== context.activity.recipient.id) {
-                    const welcomeMessage = 'Welcome to my bot, the bot is designed to do many things, but as of now it works as a reminder, its still in alpha development stage. So contact BT for more info.';
+                    const welcomeMessage = "Welcome to bts Reminder bot, the bot is useful both in private chat and you can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
                     await context.sendActivity(welcomeMessage);
                 }
             }
