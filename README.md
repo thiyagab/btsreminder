@@ -15,6 +15,7 @@ What works now?
 TODO:
 1. Using a proper scheduling framework like agenda backed by mongo
 2. Recurrence
+3. add capability to message channels
 
 
 
