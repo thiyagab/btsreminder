@@ -1,41 +1,22 @@
-# node-js-getting-started
+Its a simple reminder bot thats works with Microsoft Teams,
 
-A barebones Node.js app using [Express 4](http://expressjs.com/).
+The code is improvised from the proactive messaging and message extension samples from Microsoft Bot framework.
 
-This application supports the [Getting Started on Heroku with Node.js](https://devcenter.heroku.com/articles/getting-started-with-nodejs) article - check it out.
+What works now?
 
-## Running Locally
+1. Schedule a reminder in public channels and group chats by selecting a message and choosing 'remind me this' from action menu
+2. Schedule a reminder by chatting 1:1 with the bot, with natural language,
+   e.g. Remind To submit my report in 3 hours
+3. As of now it only supports one time schedule
+4. Only supports hours or minutes , not days not hours and minutes together
+5. Schedules will be lost on restart
 
-Make sure you have [Node.js](http://nodejs.org/) and the [Heroku CLI](https://cli.heroku.com/) installed.
 
-```sh
-$ git clone https://github.com/heroku/node-js-getting-started.git # or clone your own fork
-$ cd node-js-getting-started
-$ npm install
-$ npm start
-```
+TODO:
+1. Using a proper scheduling framework like agenda backed by mongo
+2. Recurrence
+3. add capability to message channels
 
-Your app should now be running on [localhost:5000](http://localhost:5000/).
 
-## Deploying to Heroku
 
-```
-$ heroku create
-$ git push heroku master
-$ heroku open
-```
-or
 
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-
-## Documentation
-
-For more information about using Node.js on Heroku, see these Dev Center articles:
-
-- [Getting Started on Heroku with Node.js](https://devcenter.heroku.com/articles/getting-started-with-nodejs)
-- [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
-- [Node.js on Heroku](https://devcenter.heroku.com/categories/nodejs)
-- [Best Practices for Node.js Development](https://devcenter.heroku.com/articles/node-best-practices)
-- [Using WebSockets on Heroku with Node.js](https://devcenter.heroku.com/articles/node-websockets)
-
-mongodb+srv://bt:<password>@btsreminder-wz10c.mongodb.net/<dbname>?retryWrites=true&w=majority
