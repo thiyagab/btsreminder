@@ -14,9 +14,6 @@ class BTsBuyBot extends TeamsActivityHandler {
      */
     async run(context) {
         await super.run(context);
-
-        // Save any state changes. The load happened during the execution of the Dialog.
-        await this.userState.saveChanges(context, false);
     }
     
 
@@ -37,74 +34,84 @@ class BTsBuyBot extends TeamsActivityHandler {
          return { status: 200 };
     }
 
-    constructor(adapter,userState) {
+    constructor(adapter,db) {
         super();
-
         this.adapter=adapter;
-        this.msgcount=0;
         this.msgActivityReferences=[]
-        this.msgTimeoutReferences=[]       
-        this.userProfileAccessor = userState.createProperty(USER_PROFILE_PROPERTY);
-
-        this.userState = userState;
-
+        this.msgTimeoutReferences=[]
+        this.db=db 
         this.onConversationUpdate(async (context, next) => {
             this.addConversationReference(context.activity);
             await next();
         });
 
         this.onMembersAdded(async (context, next) => {
-            const membersAdded = context.activity.membersAdded;
-            for (let cnt = 0; cnt < membersAdded.length; cnt++) {
-                if (membersAdded[cnt].id !== context.activity.recipient.id) {
-                    const welcomeMessage = "Welcome to bts Reminder bot, the bot is useful both in private chat and you can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
-                    await context.sendActivity(welcomeMessage);
-                }
-            }
-            console.log('My Son aadhav is brilliant')
+            this.processMembersAdded(context);
             await next();
         });
 
         this.onMessage(async (context, next) => {
-            const conversationReference=this.addConversationReference(context.activity);
-            const message = context.activity.text;
-            // Yes the code is shitty and its intentional
-            if(message.toLowerCase().startsWith("remind")){
-                const startIndex=6;
-                const endIndex=message.lastIndexOf('in ');
-                if(endIndex>0){
-                    let reminderText=message.substring(startIndex,endIndex).trim();
-                    const interval=message.substring(endIndex+3,message.length).trim()
-                    let intervalinHr=1;
-                    intervalinHr=parseFloat(interval.split(' ')[0]);
-                    console.log("Scheduling message in "+intervalinHr);
-                    if(interval.indexOf('m')>0){
-                        intervalinHr=intervalinHr/60;
-                    }
-                    const textToRemind="<b>Reminder:</b><br>"+reminderText;
-                    this.sendMessage(conversationReference,textToRemind,reminderText,intervalinHr)
-                }else{
-                    await context.sendActivity('Invalid format. Should end with:  in \'x\' mins|hrs|minutes|hours');
-                }
-                
-            }
+            this.processIncomingMessage(context);
             await next();
         });
     }
 
+
+    async processMembersAdded(context){
+        const membersAdded = context.activity.membersAdded;
+        for (let cnt = 0; cnt < membersAdded.length; cnt++) {
+            if (membersAdded[cnt].id !== context.activity.recipient.id) {
+                const welcomeMessage = "Welcome to bts Reminder bot, the bot is useful both in private chat and you can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
+                await context.sendActivity(welcomeMessage);
+            }
+        }
+        console.log('My Son aadhav is brilliant')
+    }
+
+    async processIncomingMessage(context){
+        const conversationReference=this.addConversationReference(context.activity);
+        const message = context.activity.text;
+        // Yes the code is shitty and its intentional
+        if(message.toLowerCase().startsWith("remind")){
+            const startIndex=6;
+            const endIndex=message.lastIndexOf('in ');
+            if(endIndex>0){
+                let reminderText=message.substring(startIndex,endIndex).trim();
+                const interval=message.substring(endIndex+3,message.length).trim()
+                let intervalinHr=1;
+                intervalinHr=parseFloat(interval.split(' ')[0]);
+                
+                if(interval.indexOf('m')>0){
+                    intervalinHr=intervalinHr/60;
+                }
+                console.log("Scheduling message in "+intervalinHr);
+                const textToRemind="<b>Reminder:</b><br>"+reminderText;
+                this.sendMessage(conversationReference,textToRemind,reminderText,intervalinHr)
+            }else{
+                await context.sendActivity('Invalid format. Should end with:  in \'x\' mins|hrs|minutes|hours');
+            }
+            
+        }
+    }
+
     addConversationReference(activity) {
         const conversationReference = TurnContext.getConversationReference(activity); 
-        this.userProfileAccessor.conversationReference=conversationReference;
+        const user={"_id":activity.from.id,"conversationreference":conversationReference}
+        this.db.insertOrUpdateUser(user);
         return conversationReference;
     }
 
-    getConversationReference(context){
+   async getConversationReference(context){
         //TODO THIS IS BROKEN.  this will return someone else's conversation reference too
         // We need to persist the conversation reference per userid in DB
-        return this.userProfileAccessor.conversationReference;
+        // return this.userProfileAccessor.conversationReference;
+        const user= await this.db.getUser(context.activity.from.id)
+        if(user){
+            return user.conversationreference
+        }
     }
 
-    remindMe(context, action) {
+    async remindMe(context, action) {
         // The user has chosen to share a message by choosing the 'Share Message' context menu command.
         let userName = 'unknown';
         if (action.messagePayload.from &&
@@ -112,10 +119,10 @@ class BTsBuyBot extends TeamsActivityHandler {
                 action.messagePayload.from.user.displayName) {
             userName = action.messagePayload.from.user.displayName;
         }
-        console.log("Action channelid: "+context.activity.channelId);
         let remindat= action.data.remindat;
         let textToRemind= action.messagePayload.body.content;
-        let conversationReference= this.getConversationReference(context);
+        let conversationReference= await this.getConversationReference(context);
+
         textToRemind ="<b>Reminder:</b><br>"+ textToRemind+"<a href=\""+action.messagePayload.linkToMessage+"\"><i>Orignal Message</i></a>"
         let reminderText= action.messagePayload.body.content;
         if(remindat)
@@ -182,7 +189,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         });
         let timeoutid=this.scheduleMessage(conversationReference,textToRemind,timeout,msgid);
         this.msgTimeoutReferences[msgid]=timeoutid;
-        console.log("Scheduling with msgid "+msgid+" total schedules: "+this.msgTimeoutReferences.length);
+        console.log("Scheduling with msgid "+msgid+" total schedules: "+this.msgActivityReferences.length);
     }
 
 

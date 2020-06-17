@@ -2,18 +2,15 @@ const Agenda = require('Agenda')
 const mongodb = require('mongodb');
 
 
-const MONGO_URL='mongodb+srv://bt:3@btsreminder-wz10c.mongodb.net/btsreminder?authSource=admin&replicaSet=btsreminder-shard-0&w=majority&readPreference=primary&appname=MongoDB%20Compass&retryWrites=true&ssl=true';
 class DB {
     constructor(adapter){
         this.adapter=adapter
         // this.initializeAgenda();
-        
-
-        
+        this.initializeMongo(); 
     }
 
     async initializeAgenda(){
-        this.agenda = new Agenda({db: {address: MONGO_URL}});
+        this.agenda = new Agenda({db: {address: process.env.MONGO_URL}});
         
         this.agenda.define('printsomething', async job => {
             console.log('Printing something '+job.attrs.data.name);
@@ -30,22 +27,21 @@ class DB {
     }
 
 
-   async initializeMongo(){
-        
-       const client = await mongodb.MongoClient.connect(MONGO_URL, {useNewUrlParser: true});
-       const db=client.db("btsreminder");
-       const myobj={"_id":"ddsdg","name":"thiyaga"}
-    //    db.collection("users").insertOne(myobj)
-       await db.collection("users").update({"_id":"ddsdg"},{"_id":"ddsdg","name":"jgj"},{upsert:true})
-       
-        // this.insertOrUpdateUser(myobj)
-
+   async initializeMongo(){       
+       const client = await mongodb.MongoClient.connect(process.env.MONGO_URL, {useNewUrlParser: true,useUnifiedTopology: true});
+       this.db=client.db("btsreminder");
+       console.log('Mongo initialized.')
     }
 
-    insertOrUpdateUser(user){
-        this.db.collection("users").insertOne(user)
-
+    async insertOrUpdateUser(user){
+        await this.db.collection("users").updateOne({"_id":user._id}, { $set:user},{upsert:true})
     }
+
+    async getUser(userid){
+        return await this.db.collection("users").findOne({"_id":userid});
+    }
+
+  
 
     async scheduleSomething(){
         
