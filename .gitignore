@@ -3,7 +3,7 @@ node_modules
 npm-debug.log
 
 # Local development
-*.env
+.env
 *.dev
 .DS_Store
 
@@ -11,3 +11,4 @@ npm-debug.log
 Dockerfile
 docker-compose.yml
 test.js
+.env

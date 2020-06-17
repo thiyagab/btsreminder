@@ -99,6 +99,8 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
     getConversationReference(context){
+        //TODO THIS IS BROKEN.  this will return someone else's conversation reference too
+        // We need to persist the conversation reference per userid in DB
         return this.userProfileAccessor.conversationReference;
     }
 
@@ -150,7 +152,7 @@ class BTsBuyBot extends TeamsActivityHandler {
     scheduleMessage(conversationReference,text,timeout,msgid){
         const timeoutid=setTimeout(() => {
             this.adapter.continueConversation(conversationReference, async turnContext => {
-                //Update activity is not sending notification, and also seeing multiple messages is annoying, so delting the redundant scheduled message    
+                //UpdateActivity is not sending notification, and also seeing multiple messages is annoying, so delting the redundant scheduled message    
                 if (this.msgActivityReferences[msgid]){
                     await turnContext.deleteActivity(this.msgActivityReferences[msgid]);
                     delete this.msgActivityReferences[msgid];
@@ -170,9 +172,6 @@ class BTsBuyBot extends TeamsActivityHandler {
         //If this code works for multiple users and multiple reminders, its a miracle
         //and ofcourse this wont work between restarts 
         const msgid=this.getUniqueMessageId();
-        let timeoutid=this.scheduleMessage(conversationReference,textToRemind,timeout,msgid);
-        this.msgTimeoutReferences[msgid]=timeoutid;
-        console.log("Scheduling with msgid "+msgid+" total schedules: "+this.msgTimeoutReferences.length);
         this.adapter.continueConversation(conversationReference, async turnContext => {
             const activity=await turnContext.sendActivity({
                 attachments: [
@@ -181,6 +180,14 @@ class BTsBuyBot extends TeamsActivityHandler {
             });
             this.msgActivityReferences[msgid]=activity.id;
         });
+        let timeoutid=this.scheduleMessage(conversationReference,textToRemind,timeout,msgid);
+        this.msgTimeoutReferences[msgid]=timeoutid;
+        console.log("Scheduling with msgid "+msgid+" total schedules: "+this.msgTimeoutReferences.length);
+    }
+
+
+    scheduleMessageWithDB(){
+
     }
 
     //In future our implementation will be db based, so we will store the msg, activity states in db

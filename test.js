@@ -1,7 +1,10 @@
-const { TeamsActivityHandler, CardFactory,TurnContext,MessageFactory} = require('botbuilder');
-
-let ab=0.16;
-let str = ab<1?Math.ceil(ab*60)+" minutes":ab+" hours";
-console.log(new Date().valueOf())
+const { DB} = require('./data/DB');
+const db = new DB();
+db.initializeMongo()
+// console.log(new Date().valueOf())
+// console.log(new Date().valueOf())
+// console.log(process.hrtime()[1])
+// console.log(process.hrtime()[1])
+// db.scheduleSomething()
 
 
