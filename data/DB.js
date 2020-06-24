@@ -1,32 +1,39 @@
-// const Agenda = require('Agenda')
+const Agenda = require('Agenda')
 const mongodb = require('mongodb');
+const { TurnContext,MessageFactory} = require('botbuilder');
 
 
 class DB {
     constructor(adapter){
         this.adapter=adapter
-        // this.initializeAgenda();
+        this.initializeAgenda();
         this.initializeMongo(); 
     }
 
     async initializeAgenda(){
-        this.agenda = new Agenda({db: {address: process.env.MONGO_URL}});
-        
-        this.agenda.define('printsomething', async job => {
-            console.log('Printing something '+job.attrs.data.name);
-            job.remove()
+        this.agenda = new Agenda({db: {address: process.env.MONGO_URL,useUnifiedTopology: true}});
+          
+        this.agenda.define('scheduleText', async job => {
+            let user = await this.getUser(job.attrs.data.userid)
+            if(user && user.conversationreference){
+                this.adapter.continueConversation(user.conversationreference, async turnContext => {
+                    //UpdateActivity is not sending notification, and also seeing multiple messages is annoying, so delting the redundant scheduled message    
+                    if (job.attrs.data.activityid){
+                        await turnContext.deleteActivity(job.attrs.data.activityid);
+                    }
+                    await turnContext.sendActivity(MessageFactory.text(job.attrs.data.text));
+                });
+            }else{
+                console.log("Job with info and user : "+job.attrs.data+" not found")
+            }
+            await job.remove()
           });
         
-          this.agenda.define('scheduleText', async job => {
-            
-            console.log('scheduling something '+job.attrs.data.name);
-            job.remove()
-          });
         
         await this.agenda.start();  
     }
 
-
+    
    async initializeMongo(){       
        const client = await mongodb.MongoClient.connect(process.env.MONGO_URL, {useNewUrlParser: true,useUnifiedTopology: true});
        this.db=client.db("btsreminder");
@@ -41,33 +48,17 @@ class DB {
         return await this.db.collection("users").findOne({"_id":userid});
     }
 
-  
 
-    async scheduleSomething(){
-        
-        const jobs=await this.agenda.jobs({name: 'printsomething',data:{"name":"a"}})
-        jobs.forEach(job => {
-            console.log(job.attrs.data.name)
-        });
-
-        // await this.agenda.schedule('20 minutes', 'printsomething',{"name":"a"});
-        // await this.agenda.schedule('30 minutes', 'printsomething',{"name":"b"});
-        // await this.agenda.every('30 seconds', 'printsomething',{"name":"summa"});
+    async scheduleMessage(data,timeouttext){
+        await this.agenda.schedule(timeouttext, 'scheduleText',data);
     }
 
-    async scheduleMessage(data,timeout,callback){
-        data.msgid
-        data.conversationReference
-        data.text
+    async removeJob(msgid){
+         const jobs = await this.agenda.jobs({name:'scheduleText',data:{"msgid":msgid}});
+         if(jobs && jobs.length>0){
+            await jobs[0].remove()
+         }
         
-        const jobs=await this.agenda.jobs({name: 'printsomething',data:{"name":"a"}})
-        jobs.forEach(job => {
-            console.log(job.attrs.data.name)
-        });
-
-        // await this.agenda.schedule('20 minutes', 'printsomething',{"name":"a"});
-        // await this.agenda.schedule('30 minutes', 'printsomething',{"name":"b"});
-        // await this.agenda.every('30 seconds', 'printsomething',{"name":"summa"});
     }
 }
 module.exports.DB = DB;

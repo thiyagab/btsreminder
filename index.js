@@ -54,8 +54,7 @@ const onTurnErrorHandler = async (context, error) => {
 
 // Set the onTurnError for the singleton BotFrameworkAdapter.
 adapter.onTurnError = onTurnErrorHandler;
-const db = new DB()
-console.log(db)
+const db = new DB(adapter)
 const bot = new BTsBuyBot(adapter,db);
 
 // Listen for incoming requests.

@@ -29,7 +29,6 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
    async  handleTeamsCardActionInvoke(context) {
-         console.log(context.activity.value.timeoutid);
          await this.deleteActivity(context,context.activity.replyToId,context.activity.value.msgid);
          return { status: 200 };
     }
@@ -37,11 +36,9 @@ class BTsBuyBot extends TeamsActivityHandler {
     constructor(adapter,db) {
         super();
         this.adapter=adapter;
-        this.msgActivityReferences=[]
-        this.msgTimeoutReferences=[]
         this.db=db 
         this.onConversationUpdate(async (context, next) => {
-            this.addConversationReference(context.activity);
+            await this.addConversationReference(context.activity);
             await next();
         });
 
@@ -61,7 +58,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         const membersAdded = context.activity.membersAdded;
         for (let cnt = 0; cnt < membersAdded.length; cnt++) {
             if (membersAdded[cnt].id !== context.activity.recipient.id) {
-                const welcomeMessage = "Welcome to bts Reminder bot, the bot is useful both in private chat and you can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
+                const welcomeMessage = "Welcome to BTs Reminder bot, the bot is useful both in private chat and you can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
                 await context.sendActivity(welcomeMessage);
             }
         }
@@ -69,24 +66,18 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
     async processIncomingMessage(context){
-        const conversationReference=this.addConversationReference(context.activity);
         const message = context.activity.text;
+        const conversationReference= await this.addConversationReference(context.activity);
+        
         // Yes the code is shitty and its intentional
         if(message.toLowerCase().startsWith("remind")){
             const startIndex=6;
-            const endIndex=message.lastIndexOf('in ');
-            if(endIndex>0){
-                let reminderText=message.substring(startIndex,endIndex).trim();
-                const interval=message.substring(endIndex+3,message.length).trim()
-                let intervalinHr=1;
-                intervalinHr=parseFloat(interval.split(' ')[0]);
-                
-                if(interval.indexOf('m')>0){
-                    intervalinHr=intervalinHr/60;
-                }
-                console.log("Scheduling message in "+intervalinHr);
+            let parsedValues=this.parseTextWithSchedule(message)
+            if(parsedValues.length>0){
+                let reminderText=parsedValues[0].substring(startIndex).trim();
+                const timerText=parsedValues[1].trim()
                 const textToRemind="<b>Reminder:</b><br>"+reminderText;
-                this.sendMessage(conversationReference,textToRemind,reminderText,intervalinHr)
+                this.sendMessage(conversationReference,textToRemind,reminderText,timerText)
             }else{
                 await context.sendActivity('Invalid format. Should end with:  in \'x\' mins|hrs|minutes|hours');
             }
@@ -94,17 +85,14 @@ class BTsBuyBot extends TeamsActivityHandler {
         }
     }
 
-    addConversationReference(activity) {
+    async addConversationReference(activity) {
         const conversationReference = TurnContext.getConversationReference(activity); 
         const user={"_id":activity.from.id,"conversationreference":conversationReference}
-        this.db.insertOrUpdateUser(user);
+        await this.db.insertOrUpdateUser(user);
         return conversationReference;
     }
 
    async getConversationReference(context){
-        //TODO THIS IS BROKEN.  this will return someone else's conversation reference too
-        // We need to persist the conversation reference per userid in DB
-        // return this.userProfileAccessor.conversationReference;
         const user= await this.db.getUser(context.activity.from.id)
         if(user){
             return user.conversationreference
@@ -148,34 +136,13 @@ class BTsBuyBot extends TeamsActivityHandler {
 
 
     async deleteActivity (context,activityid,msgid){
-        if(this.msgTimeoutReferences[msgid]){
-            clearTimeout(this.msgTimeoutReferences[msgid]);
-        }
-        delete this.msgTimeoutReferences[msgid]
-        delete this.msgActivityReferences[msgid];
+        await this.db.removeJob(msgid)
         await context.deleteActivity(activityid);
     }
 
-    scheduleMessage(conversationReference,text,timeout,msgid){
-        const timeoutid=setTimeout(() => {
-            this.adapter.continueConversation(conversationReference, async turnContext => {
-                //UpdateActivity is not sending notification, and also seeing multiple messages is annoying, so delting the redundant scheduled message    
-                if (this.msgActivityReferences[msgid]){
-                    await turnContext.deleteActivity(this.msgActivityReferences[msgid]);
-                    delete this.msgActivityReferences[msgid];
-                }
-                await turnContext.sendActivity(MessageFactory.text(text));
-            });
-        }, timeout*3600*1000);
-        return timeoutid;
-    }
-    
-    sendMessage(conversationReference,textToRemind,reminderText,remindat){
-        let timeout=0.1;
-        if(remindat){
-           timeout= parseFloat(remindat);
-        }
-        reminderText=reminderText+"<br> <i> in "+(timeout<1? Math.ceil(timeout*60)+" minute(s)":timeout+" hour(s)")+"</i>";
+       
+    sendMessage(conversationReference,textToRemind,reminderText,timerText){
+        reminderText=reminderText+"<br> <i> "+timerText+"</i>";
         //If this code works for multiple users and multiple reminders, its a miracle
         //and ofcourse this wont work between restarts 
         const msgid=this.getUniqueMessageId();
@@ -185,16 +152,31 @@ class BTsBuyBot extends TeamsActivityHandler {
                     this.createCard(reminderText,msgid)
                 ]
             });
-            this.msgActivityReferences[msgid]=activity.id;
+            this.scheduleMessageWithDB(conversationReference.user.id,activity.id,msgid,textToRemind,timerText)
         });
-        let timeoutid=this.scheduleMessage(conversationReference,textToRemind,timeout,msgid);
-        this.msgTimeoutReferences[msgid]=timeoutid;
-        console.log("Scheduling with msgid "+msgid+" total schedules: "+this.msgActivityReferences.length);
+        
+        console.log("Scheduling with msgid "+msgid);
     }
 
 
-    scheduleMessageWithDB(){
+    
 
+    scheduleMessageWithDB(userid,activityid,msgid,textToRemind,timerText){
+      this.db.scheduleMessage({userid:userid,text:textToRemind,activityid:activityid,msgid:msgid},timerText)
+
+    }
+
+    parseTextWithSchedule(originalText){
+        let lastIndex=originalText.lastIndexOf('in ')
+        if(lastIndex<originalText.lastIndexOf('at ')){
+             lastIndex=originalText.lastIndexOf('at ')
+        }
+        let parsedValues=[]
+        if(lastIndex>0){
+            parsedValues[0]=originalText.substring(0,lastIndex)
+            parsedValues[1]=originalText.substring(lastIndex,originalText.length)
+        }
+        return parsedValues
     }
 
     //In future our implementation will be db based, so we will store the msg, activity states in db
