@@ -1,4 +1,4 @@
-const Agenda = require('Agenda')
+const Agenda = require('agenda')
 const mongodb = require('mongodb');
 const { TurnContext,MessageFactory} = require('botbuilder');
 
