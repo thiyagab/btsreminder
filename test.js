@@ -6,4 +6,4 @@ let today = new Date()
 
 const d = date('1')
 
-console.log(d)
+console.log(today.getTimezoneOffset())
