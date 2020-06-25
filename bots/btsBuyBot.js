@@ -69,6 +69,7 @@ class BTsBuyBot extends TeamsActivityHandler {
     async processIncomingMessage(context){
         const message = context.activity.text;
         let localTimestamp=context.activity.localTimestamp
+        console.log(context.activity)
         const conversationReference= await this.addConversationReference(context.activity);
         
         // Yes the code is shitty and its intentional
