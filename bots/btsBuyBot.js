@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 const { TeamsActivityHandler, CardFactory,TurnContext,MessageFactory} = require('botbuilder');
+const datejs = require('date.js');
 
 // The accessor names for the conversation data and user profile state property accessors.
 const CONVERSATION_DATA_PROPERTY = 'conversationData';
@@ -67,6 +68,7 @@ class BTsBuyBot extends TeamsActivityHandler {
 
     async processIncomingMessage(context){
         const message = context.activity.text;
+        let localTimestamp=context.activity.localTimestamp
         const conversationReference= await this.addConversationReference(context.activity);
         
         // Yes the code is shitty and its intentional
@@ -77,7 +79,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 let reminderText=parsedValues[0].substring(startIndex).trim();
                 const timerText=parsedValues[1].trim()
                 const textToRemind="<b>Reminder:</b><br>"+reminderText;
-                this.sendMessage(conversationReference,textToRemind,reminderText,timerText)
+                this.sendMessage(conversationReference,textToRemind,reminderText,timerText,localTimestamp)
             }else{
                 await context.sendActivity('Invalid format. Should end with:  in \'x\' mins|hrs|minutes|hours');
             }
@@ -116,7 +118,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         if(remindat)
         console.log("Scheduling action message in "+remindat);
         if (conversationReference){
-            this.sendMessage(conversationReference,textToRemind,reminderText,remindat);
+            this.sendMessage(conversationReference,textToRemind,reminderText,remindat,context.activity.localTimestamp);
             
         }else{
             const heroCard = CardFactory.heroCard(`I dont know you`,
@@ -141,7 +143,7 @@ class BTsBuyBot extends TeamsActivityHandler {
     }
 
        
-    sendMessage(conversationReference,textToRemind,reminderText,timerText){
+    sendMessage(conversationReference,textToRemind,reminderText,timerText,localTimestamp){
         reminderText=reminderText+"<br> <i> "+timerText+"</i>";
         //If this code works for multiple users and multiple reminders, its a miracle
         //and ofcourse this wont work between restarts 
@@ -152,7 +154,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                     this.createCard(reminderText,msgid)
                 ]
             });
-            this.scheduleMessageWithDB(conversationReference.user.id,activity.id,msgid,textToRemind,timerText)
+            this.scheduleMessageWithDB(conversationReference.user.id,activity.id,msgid,textToRemind,timerText,localTimestamp)
         });
         
         console.log("Scheduling with msgid "+msgid);
@@ -161,8 +163,13 @@ class BTsBuyBot extends TeamsActivityHandler {
 
     
 
-    scheduleMessageWithDB(userid,activityid,msgid,textToRemind,timerText){
-      this.db.scheduleMessage({userid:userid,text:textToRemind,activityid:activityid,msgid:msgid},timerText)
+    scheduleMessageWithDB(userid,activityid,msgid,textToRemind,timerText,localTimestamp){
+      let scheduletime = new datejs(timerText)
+      //Lets see when the first bug comes, i believe this simple check covers 99% of usecase
+      if(timerText.indexOf('at ')>0 || timerText.indexOf(':')){
+          scheduletime=new Date(scheduletime.valueOf()+(new Date().valueOf()-localTimestamp.valueOf()))
+      }
+      this.db.scheduleMessage({userid:userid,text:textToRemind,activityid:activityid,msgid:msgid},scheduletime)
 
     }
 

@@ -49,8 +49,8 @@ class DB {
     }
 
 
-    async scheduleMessage(data,timeouttext){
-        await this.agenda.schedule(timeouttext, 'scheduleText',data);
+    async scheduleMessage(data,scheduletime){
+        await this.agenda.schedule(scheduletime, 'scheduleText',data);
     }
 
     async removeJob(msgid){
