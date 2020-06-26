@@ -57,7 +57,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         const membersAdded = context.activity.membersAdded;
         for (let cnt = 0; cnt < membersAdded.length; cnt++) {
             if (membersAdded[cnt].id !== context.activity.recipient.id) {
-                const welcomeMessage = "Welcome to BTs Reminder bot, you can set the reminder by chatting 1:1 with the bot\nSamples are 'remind to update timesheet at 5:00pm','remind to finish this task in 1 hour 15 minutes'\n\nyou can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
+                const welcomeMessage = "Welcome to BTs Reminder bot, you can set the reminder by chatting 1:1 with the bot<br>Samples are:<br>'remind to update timesheet at 5:00pm','remind to finish this task in 1 hour 15 minutes'<br><br>you can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
                 await context.sendActivity(welcomeMessage);
             }
         }
@@ -69,7 +69,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         let localTimestamp=context.activity.rawLocalTimestamp
         const conversationReference= await this.addConversationReference(context.activity);
         if(!conversationReference){
-            await context.sendActivity('Not supported in channel or group. Chat with me 1:1');
+            await context.sendActivity('Not supported in channel or group. Chat with me 1:1, move mouse over the bot image and choose to chat');
         }else if(message.toLowerCase().startsWith("remind")){
             const startIndex=6;
             let parsedValues=this.parseTextWithSchedule(message)
@@ -87,7 +87,7 @@ class BTsBuyBot extends TeamsActivityHandler {
 
     async addConversationReference(activity) {
         const conversationReference = TurnContext.getConversationReference(activity); 
-        if('personal'==conversationReference.conversationType){
+        if(conversationReference.conversation && 'personal'==conversationReference.conversation.conversationType){
             const user={"_id":activity.from.id,"conversationreference":conversationReference}
             await this.db.insertOrUpdateUser(user);
             return conversationReference;
@@ -118,11 +118,11 @@ class BTsBuyBot extends TeamsActivityHandler {
         if(remindat)
         console.log("Scheduling action message in "+remindat);
         if (conversationReference){
-            this.sendMessage(conversationReference,textToRemind,reminderText,remindat,context.activity.localTimestamp);
+            this.sendMessage(conversationReference,textToRemind,reminderText,remindat,context.activity.rawLocalTimestamp);
             
         }else{
             const heroCard = CardFactory.heroCard(`I dont know you`,
-            'As a Bot i am not supposed to message you, until you message me first. Send me a message ( just a hi) and introduce yourself first, before asking me to remind you. (since there is no visible only to you option as in slack, i am using this compose box, please clear after reading)');
+            'As a Bot i am not supposed to message you, until you message me first. Send me a message ( just a hi) and introduce yourself first. (since there is no visible only to you option as in slack, i am using this compose box, please clear after reading)');
             const attachment = { contentType: heroCard.contentType, content: heroCard.content, preview: heroCard };
             return {
                 composeExtension: {
