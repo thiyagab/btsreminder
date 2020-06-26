@@ -167,7 +167,7 @@ class BTsBuyBot extends TeamsActivityHandler {
       let scheduletime = new datejs(timerText)
       //Lets see when the first bug comes, i believe this simple check covers 99% of usecase
       if(timerText.indexOf('at ')>0 || timerText.indexOf(':')>0){        
-          scheduletime=new Date(getScheduleWithTimezoneOffset(scheduletime,localTimestamp))
+          scheduletime=new Date(this.getScheduleWithTimezoneOffset(scheduletime,localTimestamp))
       }
       this.db.scheduleMessage({userid:userid,text:textToRemind,activityid:activityid,msgid:msgid},scheduletime)
 
