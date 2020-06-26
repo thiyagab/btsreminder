@@ -68,7 +68,7 @@ class BTsBuyBot extends TeamsActivityHandler {
 
     async processIncomingMessage(context){
         const message = context.activity.text;
-        let localTimestamp=context.activity.localTimestamp
+        let localTimestamp=context.activity.rawLocalTimestamp
         console.log(context.activity)
         const conversationReference= await this.addConversationReference(context.activity);
         
@@ -170,12 +170,17 @@ class BTsBuyBot extends TeamsActivityHandler {
       if(timerText.indexOf('at ')>0 || timerText.indexOf(':')){
           console.log(scheduletime)
           console.log(localTimestamp)
-          console.log(localTimestamp.getTimezoneOffset())
-          scheduletime=new Date(scheduletime.valueOf()+(60*1000*localTimestamp.getTimezoneOffset()))
+          
+          scheduletime=new Date(scheduletime.valueOf()+(60*1000*getTimezoneOffset(localTimestamp)))
           console.log(scheduletime)
       }
       this.db.scheduleMessage({userid:userid,text:textToRemind,activityid:activityid,msgid:msgid},scheduletime)
 
+    }
+
+    getTimezoneOffset(localTimestamp){
+        //TODO parse the timestamp, as of now it works only for india, will do it
+        return -330;
     }
 
     parseTextWithSchedule(originalText){
