@@ -171,7 +171,7 @@ class BTsBuyBot extends TeamsActivityHandler {
           console.log(scheduletime)
           console.log(localTimestamp)
           
-          scheduletime=new Date(scheduletime.valueOf()+(60*1000*getTimezoneOffset(localTimestamp)))
+          scheduletime=new Date(scheduletime.valueOf()+(60*1000*this.getTimezoneOffset(localTimestamp)))
           console.log(scheduletime)
       }
       this.db.scheduleMessage({userid:userid,text:textToRemind,activityid:activityid,msgid:msgid},scheduletime)
