@@ -57,7 +57,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         const membersAdded = context.activity.membersAdded;
         for (let cnt = 0; cnt < membersAdded.length; cnt++) {
             if (membersAdded[cnt].id !== context.activity.recipient.id) {
-                const welcomeMessage = "Welcome to BTs Reminder bot, the bot is useful both in private chat and you can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
+                const welcomeMessage = "Welcome to BTs Reminder bot, you can set the reminder by chatting 1:1 with the bot\nSamples are 'remind to update timesheet at 5:00pm','remind to finish this task in 1 hour 15 minutes'\n\nyou can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
                 await context.sendActivity(welcomeMessage);
             }
         }
@@ -68,7 +68,9 @@ class BTsBuyBot extends TeamsActivityHandler {
         const message = context.activity.text;
         let localTimestamp=context.activity.rawLocalTimestamp
         const conversationReference= await this.addConversationReference(context.activity);
-        if(message.toLowerCase().startsWith("remind")){
+        if(!conversationReference){
+            await context.sendActivity('Not supported in channel or group. Chat with me 1:1');
+        }else if(message.toLowerCase().startsWith("remind")){
             const startIndex=6;
             let parsedValues=this.parseTextWithSchedule(message)
             if(parsedValues.length>0){
@@ -85,9 +87,11 @@ class BTsBuyBot extends TeamsActivityHandler {
 
     async addConversationReference(activity) {
         const conversationReference = TurnContext.getConversationReference(activity); 
-        const user={"_id":activity.from.id,"conversationreference":conversationReference}
-        await this.db.insertOrUpdateUser(user);
-        return conversationReference;
+        if('personal'==conversationReference.conversationType){
+            const user={"_id":activity.from.id,"conversationreference":conversationReference}
+            await this.db.insertOrUpdateUser(user);
+            return conversationReference;
+        }
     }
 
    async getConversationReference(context){
