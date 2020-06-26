@@ -15,6 +15,7 @@ class DB {
           
         this.agenda.define('scheduleText', async job => {
             let user = await this.getUser(job.attrs.data.userid)
+            console.log("Executing schedule "+job.attrs.data.msgid)
             if(user && user.conversationreference){
                 this.adapter.continueConversation(user.conversationreference, async turnContext => {
                     //UpdateActivity is not sending notification, and also seeing multiple messages is annoying, so delting the redundant scheduled message    
@@ -24,7 +25,7 @@ class DB {
                     await turnContext.sendActivity(MessageFactory.text(job.attrs.data.text));
                 });
             }else{
-                console.log("Job with info and user : "+job.attrs.data+" not found")
+                console.log("Job with info and user : "+job.attrs.data.userid+" not found")
             }
             await job.remove()
           });
@@ -54,7 +55,7 @@ class DB {
     }
 
     async removeJob(msgid){
-         const jobs = await this.agenda.jobs({name:'scheduleText',data:{"msgid":msgid}});
+         const jobs = await this.agenda.jobs({'name':'scheduleText','data.msgid':msgid});
          if(jobs && jobs.length>0){
             await jobs[0].remove()
          }

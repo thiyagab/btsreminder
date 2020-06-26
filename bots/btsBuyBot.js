@@ -21,8 +21,6 @@ class BTsBuyBot extends TeamsActivityHandler {
     handleTeamsMessagingExtensionSubmitAction(context, action) {
         switch (action.commandId) {
         case 'RemindMe':
-
-
             return this.remindMe(context, action);
         default:
             throw new Error('NotImplemented');
@@ -69,10 +67,7 @@ class BTsBuyBot extends TeamsActivityHandler {
     async processIncomingMessage(context){
         const message = context.activity.text;
         let localTimestamp=context.activity.rawLocalTimestamp
-        console.log(context.activity)
         const conversationReference= await this.addConversationReference(context.activity);
-        
-        // Yes the code is shitty and its intentional
         if(message.toLowerCase().startsWith("remind")){
             const startIndex=6;
             let parsedValues=this.parseTextWithSchedule(message)
@@ -123,7 +118,7 @@ class BTsBuyBot extends TeamsActivityHandler {
             
         }else{
             const heroCard = CardFactory.heroCard(`I dont know you`,
-            'As a Bot i am not supposed to message you, until you message me first. Send me a message and introduce yourself first, before asking me to remind you. (since there is no visible only to you option as in slack, i am using this compose box, please clear after reading)');
+            'As a Bot i am not supposed to message you, until you message me first. Send me a message ( just a hi) and introduce yourself first, before asking me to remind you. (since there is no visible only to you option as in slack, i am using this compose box, please clear after reading)');
             const attachment = { contentType: heroCard.contentType, content: heroCard.content, preview: heroCard };
             return {
                 composeExtension: {
@@ -167,20 +162,15 @@ class BTsBuyBot extends TeamsActivityHandler {
     scheduleMessageWithDB(userid,activityid,msgid,textToRemind,timerText,localTimestamp){
       let scheduletime = new datejs(timerText)
       //Lets see when the first bug comes, i believe this simple check covers 99% of usecase
-      if(timerText.indexOf('at ')>0 || timerText.indexOf(':')){
-          console.log(scheduletime)
-          console.log(localTimestamp)
-          
+      if(timerText.indexOf('at ')>0 || timerText.indexOf(':')>0){        
           scheduletime=new Date(scheduletime.valueOf()+(60*1000*this.getTimezoneOffset(localTimestamp)))
-          console.log(scheduletime)
       }
       this.db.scheduleMessage({userid:userid,text:textToRemind,activityid:activityid,msgid:msgid},scheduletime)
 
     }
 
     getTimezoneOffset(localTimestamp){
-        //TODO parse the timestamp, as of now it works only for india, will do it
-        return -330;
+        return new Date(localTimestamp).getTimezoneOffset();
     }
 
     parseTextWithSchedule(originalText){
