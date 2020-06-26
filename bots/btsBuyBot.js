@@ -117,6 +117,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         let reminderText= action.messagePayload.body.content;
         if(remindat)
         console.log("Scheduling action message in "+remindat);
+        console.log(context.activity)
         if (conversationReference){
             this.sendMessage(conversationReference,textToRemind,reminderText,remindat,context.activity.rawLocalTimestamp);
             
