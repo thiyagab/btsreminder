@@ -37,7 +37,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         this.adapter=adapter;
         this.db=db 
         this.onConversationUpdate(async (context, next) => {
-            await this.addConversationReference(context.activity);
+            // await this.addConversationReference(context.activity);
             await next();
         });
 
@@ -47,7 +47,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         });
 
         this.onMessage(async (context, next) => {
-            this.processIncomingMessage(context);
+            await this.processIncomingMessage(context);
             await next();
         });
     }
@@ -57,7 +57,8 @@ class BTsBuyBot extends TeamsActivityHandler {
         const membersAdded = context.activity.membersAdded;
         for (let cnt = 0; cnt < membersAdded.length; cnt++) {
             if (membersAdded[cnt].id !== context.activity.recipient.id) {
-                const welcomeMessage = "Welcome to BTs Reminder bot, you can set the reminder by chatting 1:1 with the bot<br>Samples are:<br>'remind to update timesheet at 5:00pm','remind to finish this task in 1 hour 15 minutes'<br><br>you can also select 'remind me this' option from action menu in  messages in public channel and group chats and its still in alpha development stage. So contact BT for more info.";
+                const welcomeMessage = "Welcome to BTs Reminder bot.<br>You can set the reminder by chatting 1:1 with me<br>Samples are:<br>"
+                "'remind to update timesheet at 5:00pm'<br>'remind to finish this task in 1 hour 15 minutes'<br><br>You can also use this reminder in public channel and group chats by selecting 'remind me this' from action menu.<br><br>Its still in beta development stage. So contact BT for more info.";
                 await context.sendActivity(welcomeMessage);
             }
         }
