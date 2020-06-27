@@ -80,7 +80,7 @@ class BTsBuyBot extends TeamsActivityHandler {
                 const textToRemind="<b>Reminder:</b><br>"+reminderText;
                 this.sendMessage(conversationReference,textToRemind,reminderText,timerText,localTimestamp)
             }else{
-                await context.sendActivity('Invalid format. Should end with:  in \'x\' mins|hrs|minutes|hours');
+                await context.sendActivity('Invalid format. Should end with either of below format<br><i><b>in</b> \'x\' mins|hrs|minutes|hours</i><br><i><b>at</b> "HH:MM" or "H" e.g at 03:05pm or at 3pm or at 3 or at 10 </i>');
             }
             
         }
