@@ -169,6 +169,7 @@ class BTsBuyBot extends TeamsActivityHandler {
       console.log('Schedule message with db: '+scheduletime)
       //Lets see when the first bug comes, i believe this simple check covers 99% of usecase
       if(timerText.indexOf('at ')>=0 || timerText.indexOf(':')>0){        
+          timerText=timerText.replace('at','').trim()
           scheduletime=this.getScheduleWithTimezoneOffset(timerText,localTimestamp)
       }
       this.db.scheduleMessage({userid:userid,text:textToRemind,activityid:activityid,msgid:msgid},scheduletime)
