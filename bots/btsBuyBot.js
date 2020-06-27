@@ -166,6 +166,7 @@ class BTsBuyBot extends TeamsActivityHandler {
 
     scheduleMessageWithDB(userid,activityid,msgid,textToRemind,timerText,localTimestamp){
       let scheduletime = new datejs(timerText)
+      console.log('Schedule message with db: '+scheduletime)
       //Lets see when the first bug comes, i believe this simple check covers 99% of usecase
       if(timerText.indexOf('at ')>=0 || timerText.indexOf(':')>0){        
           scheduletime=this.getScheduleWithTimezoneOffset(timerText,localTimestamp)
@@ -179,6 +180,7 @@ class BTsBuyBot extends TeamsActivityHandler {
         //When user says remind me at 11am, the 11 should be in his/her timezone, so we need to have a reference
         //Microsoft the way it is, cant even give a proper way to tell user's timezone, but luckily we have rawLocalTimestamp string from activity 
         //We are trying to just kick the hours part out, and squeeze our timestamp in
+        console.log(timerText+" "+localTimestamp)
         let isPM = timerText.toLowerCase().indexOf('pm')>0
         timerText=timerText.toLowerCase().replace(/pm|am/,'').trim()
         if(timerText.indexOf(':')<0){

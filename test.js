@@ -3,7 +3,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const date = require('date.js');
 let datestring='2020-06-26T11:32:54.7706462+05:30'
-let givenstring='20';
+let givenstring='9:21pm';
 
 let isPM = givenstring.toLowerCase().indexOf('pm')>0
 givenstring=givenstring.toLowerCase().replace(/pm|am/,'').trim()
