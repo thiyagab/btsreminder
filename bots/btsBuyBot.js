@@ -167,15 +167,33 @@ class BTsBuyBot extends TeamsActivityHandler {
     scheduleMessageWithDB(userid,activityid,msgid,textToRemind,timerText,localTimestamp){
       let scheduletime = new datejs(timerText)
       //Lets see when the first bug comes, i believe this simple check covers 99% of usecase
-      if(timerText.indexOf('at ')>0 || timerText.indexOf(':')>0){        
-          scheduletime=new Date(this.getScheduleWithTimezoneOffset(scheduletime,localTimestamp))
+      if(timerText.indexOf('at ')>=0 || timerText.indexOf(':')>0){        
+          scheduletime=this.getScheduleWithTimezoneOffset(timerText,localTimestamp)
       }
       this.db.scheduleMessage({userid:userid,text:textToRemind,activityid:activityid,msgid:msgid},scheduletime)
 
     }
 
-    getScheduleWithTimezoneOffset(scheduletime,localTimestamp){
-        return new Date().valueOf()+(scheduletime.valueOf()-new Date(localTimestamp).valueOf());
+    getScheduleWithTimezoneOffset(timerText,localTimestamp){
+        //Enakku vera vazhi therlaye..  if there is a better solution than this, welcome
+        //When user says remind me at 11am, the 11 should be in his/her timezone, so we need to have a reference
+        //Microsoft the way it is, cant even give a proper way to tell user's timezone, but luckily we have rawLocalTimestamp string from activity 
+        //We are trying to just kick the hours part out, and squeeze our timestamp in
+        let isPM = timerText.toLowerCase().indexOf('pm')>0
+        timerText=timerText.toLowerCase().replace(/pm|am/,'').trim()
+        if(timerText.indexOf(':')<0){
+            timerText=timerText+":00"
+        }
+
+        let splittedtimes=timerText.split(':')
+        if(isPM){
+            splittedtimes[0]=parseInt(splittedtimes[0])+12
+        }
+        timerText=(splittedtimes[0].length==1?'0':'')+splittedtimes[0]+':'+splittedtimes[1]
+        localTimestamp=localTimestamp.replace(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/,timerText)
+        let scheduledate = new Date(localTimestamp)
+        console.log(scheduledate)
+        return scheduledate
     }
 
     parseTextWithSchedule(originalText){
@@ -213,8 +231,10 @@ class BTsBuyBot extends TeamsActivityHandler {
         // let date = new Date();
         // card.content.subtitle="scheduled at: "+date.getHours()+":"+date.getMinutes();
         return card;
-
     }
+
+
+
     
 
     
