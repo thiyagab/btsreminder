@@ -8,14 +8,13 @@ What works now?
 2. Schedule a reminder by chatting 1:1 with the bot, with natural language,
    e.g. Remind To submit my report in 3 hours
 3. As of now it only supports one time schedule
-4. Only supports hours or minutes , not days not hours and minutes together
-5. Schedules will be lost on restart
+4. Supports formats 'at HH:MM' , 'in x minutes', 'in x days'
+5. Schedules are backed up by agenda framework and persisted in db
 
 
 TODO:
-1. Using a proper scheduling framework like agenda backed by mongo
-2. Recurrence
-3. add capability to message channels
+1. Recurrence
+2. add capability to message channels
 
 
 
